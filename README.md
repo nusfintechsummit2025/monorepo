@@ -6,7 +6,9 @@ Features:
 
 
 ## Environmental Setup
+- replace the environmental variables with the correct values
 - install hardhat
+(Here we use yarn package manager)
 ```bash
 yarn add hardhat
 npx hardhat
