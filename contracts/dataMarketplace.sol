@@ -13,12 +13,6 @@ contract DataMarketplace {
     address public owner;
     uint256 public dataQueryPrice;
 
-    // constructor(address _rlusdToken, uint256 _initialQueryPrice) {
-    //     rlusd = RLUSDStablecoin(_rlusdToken);
-    //     dataQueryPrice = _initialQueryPrice;
-    //     owner = msg.sender;
-    // }
-
     // Reputation mapping
     mapping(address => uint256) private reputation;
 
