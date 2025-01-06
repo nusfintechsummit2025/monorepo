@@ -1,37 +1,68 @@
-// src/components/UserInfo.js
-import React, { useEffect, useState } from 'react';
-import { ethers } from 'ethers';
-import PrivacyManagerABI from '../abis/PrivacyManager.json';
+import React, { useState } from "react";
+import axios from "axios";
 
-const UserInfo = ({ account }) => {
-  const [userInfo, setUserInfo] = useState(null);
+const UploadData = ({ account }) => {
+  const [file, setFile] = useState(null);
+  const [consent, setConsent] = useState(false);
+  const [secretKey, setSecretKey] = useState("");
 
-  useEffect(() => {
-    const fetchUserInfo = async () => {
-      if (!account) return;
+  const handleUpload = async () => {
+    if (!file) {
+      alert("No file selected");
+      return;
+    }
+    const formData = new FormData();
+    formData.append("healthData", file);
+    formData.append("userAddress", account);
+    formData.append("consent", consent);
+    formData.append("secretKey", secretKey);
 
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const privacyManagerAddress = 'YOUR_PRIVACY_MANAGER_ADDRESS';
-      const privacyManager = new ethers.Contract(privacyManagerAddress, PrivacyManagerABI, provider);
-
-      const info = await privacyManager.getUserInfo(account);
-      setUserInfo(info);
-    };
-
-    fetchUserInfo();
-  }, [account]);
-
-  if (!userInfo) return <p>Loading...</p>;
+    try {
+      const { data } = await axios.post(
+        `${process.env.REACT_APP_BACKEND_URL}/api/data/upload`,
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+      alert(`Upload success! CID: ${data.cid}\nTx Hash: ${data.txHash}`);
+    } catch (err) {
+      console.error("Upload error:", err);
+      alert("Upload failed");
+    }
+  };
 
   return (
-    <div>
-      <h3>User Information</h3>
-      <p>Registered: {userInfo[0] ? 'Yes' : 'No'}</p>
-      <p>Consent: {userInfo[1] ? 'Yes' : 'No'}</p>
-      <p>Data URI: {userInfo[2]}</p>
-      <p>Data Hash: {userInfo[3]}</p>
+    <div style={{ border: "1px solid #ccc", padding: "1rem", marginBottom: "1rem" }}>
+      <h3>Upload Health Data</h3>
+      <p>Your account: {account || "Not connected"}</p>
+      <div>
+        <label>File:</label>
+        <input
+          type="file"
+          accept=".pdf,.txt,.json,.csv"
+          onChange={(e) => setFile(e.target.files[0])}
+        />
+      </div>
+      <div>
+        <label>Consent to share data</label>
+        <input
+          type="checkbox"
+          checked={consent}
+          onChange={(e) => setConsent(e.target.checked)}
+        />
+      </div>
+      <div>
+        <label>Secret Key (for encryption):</label>
+        <input
+          type="text"
+          value={secretKey}
+          onChange={(e) => setSecretKey(e.target.value)}
+        />
+      </div>
+      <button onClick={handleUpload}>Upload</button>
     </div>
   );
 };
 
-export default UserInfo;
+export default UploadData;
