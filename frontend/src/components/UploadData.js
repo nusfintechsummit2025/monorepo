@@ -34,7 +34,9 @@ const UploadData = ({ account }) => {
         const cid = added.path;
 
         // Hash the encrypted data
-        const dataHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(encrypted));
+       
+        // const dataHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(encrypted));
+        const dataHash = ""
 
         // Interact with PrivacyManager
         const provider = new ethers.providers.Web3Provider(window.ethereum);
