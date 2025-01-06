@@ -1,9 +1,11 @@
 // src/components/UploadData.js
 import React, { useState } from 'react';
 import { ethers } from 'ethers';
+import { keccak256, toUtf8Bytes } from 'ethers';
 import PrivacyManagerABI from '../abis/PrivacyManager.json';
 import { create } from 'ipfs-http-client';
 import CryptoJS from 'crypto-js';
+import { useEffect } from 'react';
 
 const ipfsClient = create('https://ipfs.infura.io:5001/api/v0'); //TODO: replace with real api
 
@@ -34,12 +36,10 @@ const UploadData = ({ account }) => {
         const cid = added.path;
 
         // Hash the encrypted data
-       
-        // const dataHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(encrypted));
-        const dataHash = ""
+        const dataHash = keccak256(toUtf8Bytes(encrypted));
 
         // Interact with PrivacyManager
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const provider = new ethers.BrowserProvider(window.ethereum);
         const signer = provider.getSigner();
         const privacyManagerAddress = 'YOUR_PRIVACY_MANAGER_CONTRACT_ADDRESS';
         const privacyManager = new ethers.Contract(privacyManagerAddress, PrivacyManagerABI, signer);
