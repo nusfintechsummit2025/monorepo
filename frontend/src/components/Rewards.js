@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import { ethers } from "ethers";
 import RLUSD_ABI from "../abis/RLUSDStablecoin.json";
 import MARKET_ABI from "../abis/DataMarketplace.json";
+const RLUSD_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+const MARKET_ADDRESS = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
 
-const RLUSD_ADDRESS = "0x123...RLUSD";
-const MARKET_ADDRESS = "0x789...DataMarketplace";
 
 const Rewards = ({ account }) => {
   const [balance, setBalance] = useState("0");
@@ -20,7 +20,7 @@ const Rewards = ({ account }) => {
       const market = new ethers.Contract(MARKET_ADDRESS, MARKET_ABI, provider);
 
       const bal = await rlusd.balanceOf(account);
-      setBalance(ethers.utils.formatEther(bal));
+      setBalance(ethers.formatEther(bal));
 
       const rep = await market.getReputation(account);
       setReputation(rep.toString());
