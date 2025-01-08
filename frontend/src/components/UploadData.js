@@ -24,36 +24,52 @@ const UploadData = ({ account }) => {
       return;
     }
 
-    // Encrypt the file
-    const reader = new FileReader();
-    reader.onload = async () => {
-      const fileContent = reader.result;
-      const encrypted = CryptoJS.AES.encrypt(fileContent, 'your-secret-key').toString(); //TODOL encrypt with real key
+    const formData = new FormData();
+    formData.append('file', file);
 
-      // Upload to IPFS
-      try {
-        const added = await ipfsClient.add(encrypted);
-        const cid = added.path;
+    try {
+      const response = await axios.post('/api/data/process', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      alert('File processed successfully!');
+      console.log(response.data);
+    } catch (error) {
+      console.error('Upload error:', error.response?.data || error.message);
+      alert('Failed to process the file.');
+    }
 
-        // Hash the encrypted data
-        const dataHash = keccak256(toUtf8Bytes(encrypted));
+    // // Encrypt the file
+    // const reader = new FileReader();
+    // reader.onload = async () => {
+    //   const fileContent = reader.result;
+    //   const encrypted = CryptoJS.AES.encrypt(fileContent, 'your-secret-key').toString(); //TODOL encrypt with real key
 
-        // Interact with PrivacyManager
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const signer = provider.getSigner();
-        const privacyManagerAddress = 'YOUR_PRIVACY_MANAGER_CONTRACT_ADDRESS';
-        const privacyManager = new ethers.Contract(privacyManagerAddress, PrivacyManagerABI, signer);
+    //   // Upload to IPFS
+    //   try {
+    //     const added = await ipfsClient.add(encrypted);
+    //     const cid = added.path;
 
-        const tx = await privacyManager.setConsent(consent, `ipfs://${cid}`, dataHash);
-        await tx.wait();
-        alert('Data uploaded and consent set successfully!');
-      } catch (error) {
-        console.error('Upload error:', error);
-        alert('Data upload failed.');
-      }
-    };
+    //     // Hash the encrypted data
+    //     const dataHash = keccak256(toUtf8Bytes(encrypted));
 
-    reader.readAsText(file);
+    //     // Interact with PrivacyManager
+    //     const provider = new ethers.BrowserProvider(window.ethereum);
+    //     const signer = provider.getSigner();
+    //     const privacyManagerAddress = 'YOUR_PRIVACY_MANAGER_CONTRACT_ADDRESS';
+    //     const privacyManager = new ethers.Contract(privacyManagerAddress, PrivacyManagerABI, signer);
+
+    //     const tx = await privacyManager.setConsent(consent, `ipfs://${cid}`, dataHash);
+    //     await tx.wait();
+    //     alert('Data uploaded and consent set successfully!');
+    //   } catch (error) {
+    //     console.error('Upload error:', error);
+    //     alert('Data upload failed.');
+    //   }
+    // };
+
+    // reader.readAsText(file);
   };
 
   return (
