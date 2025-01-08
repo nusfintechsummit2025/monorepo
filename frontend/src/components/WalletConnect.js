@@ -27,11 +27,36 @@ const WalletConnect = ({ onConnect }) => {
   }, [onConnect]);
 
   return (
-    <div>
+    <div style={{ marginBottom: "2rem" }}>
       {address ? (
-        <p>Connected: {address}</p>
+        <div style={{
+          padding: "0.75rem 1.5rem",
+          backgroundColor: "#2ecc71",
+          color: "white",
+          borderRadius: "6px",
+          display: "inline-block",
+          fontSize: "1.1rem"
+        }}>
+          Connected: {address.slice(0, 6)}...{address.slice(-4)}
+        </div>
       ) : (
-        <button onClick={connectWallet}>Connect Wallet</button>
+        <button 
+          onClick={connectWallet}
+          style={{
+            padding: "0.75rem 1.5rem",
+            backgroundColor: "#3498DB",
+            color: "white",
+            border: "none",
+            borderRadius: "6px",
+            cursor: "pointer",
+            fontSize: "1.1rem",
+            transition: "background-color 0.2s ease"
+          }}
+          onMouseOver={(e) => e.target.style.backgroundColor = "#2980B9"}
+          onMouseOut={(e) => e.target.style.backgroundColor = "#3498DB"}
+        >
+          Connect Wallet
+        </button>
       )}
     </div>
   );
