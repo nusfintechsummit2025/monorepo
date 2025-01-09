@@ -181,11 +181,11 @@ const UploadData = ({ account }) => {
             whiteSpace: "pre-wrap",
             border: "1px solid #ddd"
           }}>
-            <strong>CSV Content:</strong>
             <pre>{csvContent}</pre>
           </div>
         )}
         <div style={{ marginBottom: "1rem" }}>
+          <div style={{ height: "18px" }}></div>
           <label>Secret Key (for encryption):</label>
           <input
             type="text"
