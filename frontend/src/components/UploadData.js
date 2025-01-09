@@ -1,17 +1,16 @@
-// src/components/UploadData.js
 import React, { useState } from 'react';
 import { ethers } from 'ethers';
 import { keccak256, toUtf8Bytes } from 'ethers';
 import PrivacyManagerABI from '../abis/PrivacyManager.json';
 import { create } from 'ipfs-http-client';
 import CryptoJS from 'crypto-js';
-import { useEffect } from 'react';
+import axios from 'axios';
 
-const ipfsClient = create('https://ipfs.infura.io:5001/api/v0'); //TODO: replace with real api
-
+const ipfsClient = create('https://ipfs.infura.io:5001/api/v0');
 
 const UploadData = ({ account }) => {
   const [file, setFile] = useState(null);
+  const [jsonData, setJsonData] = useState(null);
   const [consent, setConsent] = useState(false);
   const [secretKey, setSecretKey] = useState("");
 
@@ -20,47 +19,61 @@ const UploadData = ({ account }) => {
   const [mintResult, setMintResult] = useState("");
   const [consentResult, setConsentResult] = useState("");
 
+  // Handle JSON file selection
   const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
-  };
+    const selectedFile = e.target.files[0];
 
-  const handleUpload = async () => {
-    if (!file || !account) {
-      alert('File not selected or wallet not connected.');
-      return;
+    if (selectedFile && selectedFile.type === 'application/json') {
+      setFile(selectedFile);
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const parsedJson = JSON.parse(event.target.result);
+          setJsonData(parsedJson); // Display parsed JSON
+        } catch (err) {
+          console.error('Invalid JSON file:', err);
+          alert('Invalid JSON file. Please upload a valid JSON.');
+        }
+      };
+      reader.readAsText(selectedFile);
+    } else {
+      alert('Please upload a JSON file.');
     }
-
-    // Encrypt the file
-    const reader = new FileReader();
-    reader.onload = async () => {
-      const fileContent = reader.result;
-      const encrypted = CryptoJS.AES.encrypt(fileContent, 'your-secret-key').toString(); //TODOL encrypt with real key
-
-      // Upload to IPFS
-      try {
-        const added = await ipfsClient.add(encrypted);
-        const cid = added.path;
-
-        // Hash the encrypted data
-        const dataHash = keccak256(toUtf8Bytes(encrypted));
-
-        // Interact with PrivacyManager
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const signer = provider.getSigner();
-        const privacyManagerAddress = 'YOUR_PRIVACY_MANAGER_CONTRACT_ADDRESS';
-        const privacyManager = new ethers.Contract(privacyManagerAddress, PrivacyManagerABI, signer);
-
-        const tx = await privacyManager.setConsent(consent, `ipfs://${cid}`, dataHash);
-        await tx.wait();
-        alert('Data uploaded and consent set successfully!');
-      } catch (error) {
-        console.error('Upload error:', error);
-        alert('Data upload failed.');
-      }
-    };
-
-    reader.readAsText(file);
   };
+
+  // // Handle file upload process
+  // const handleUpload = async () => {
+  //   if (!file || !account) {
+  //     alert('File not selected or wallet not connected.');
+  //     return;
+  //   }
+
+  //   try {
+  //     // Encrypt JSON data
+  //     const encrypted = CryptoJS.AES.encrypt(JSON.stringify(jsonData), 'your-secret-key').toString(); // Replace with secure key management
+
+  //     // Upload to IPFS
+  //     const added = await ipfsClient.add(encrypted);
+  //     const cid = added.path;
+
+  //     // Hash the encrypted data
+  //     const dataHash = keccak256(toUtf8Bytes(encrypted));
+
+  //     // Interact with PrivacyManager contract
+  //     const provider = new ethers.BrowserProvider(window.ethereum);
+  //     const signer = provider.getSigner();
+  //     const privacyManagerAddress = 'YOUR_PRIVACY_MANAGER_CONTRACT_ADDRESS';
+  //     const privacyManager = new ethers.Contract(privacyManagerAddress, PrivacyManagerABI, signer);
+
+  //     const tx = await privacyManager.setConsent(consent, `ipfs://${cid}`, dataHash);
+  //     await tx.wait();
+  //     alert('Data uploaded and consent set successfully!');
+  //   } catch (error) {
+  //     console.error('Upload error:', error);
+  //     alert('Data upload failed.');
+  //   }
+  // };
 
   // Add UI components
   const SectionCard = ({ children, style }) => (
@@ -120,132 +133,29 @@ const UploadData = ({ account }) => {
   );
 
   return (
-    <div style={{
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      gap: "2rem",
-      padding: "2rem",
-      backgroundColor: "#f8f9fa",
-      borderRadius: "12px"
-    }}>
-      <SectionCard>
-        <h3 style={{ color: "#2C3E50", marginBottom: "1.5rem" }}>Upload Your Health Data</h3>
-        <div style={{ marginBottom: "1rem" }}>
-          <label 
-            htmlFor="file-upload" 
-            style={{
-              padding: "0.75rem 1.5rem",
-              backgroundColor: "#3498DB",
-              color: "white",
-              border: "none",
-              borderRadius: "6px",
-              cursor: "pointer",
-              fontSize: "1.1rem",
-              transition: "background-color 0.2s ease",
-              display: "inline-block",
-              width: "100%",
-              boxSizing: "border-box",
-              textAlign: "center"
-            }}
-            onMouseOver={(e) => e.target.style.backgroundColor = "#2980B9"}
-            onMouseOut={(e) => e.target.style.backgroundColor = "#3498DB"}
-          >
-            Choose File
-          </label>
-          <input
-            id="file-upload"
-            type="file"
-            onChange={(e) => setFile(e.target.files[0])}
-            accept=".pdf,.txt,.json,.csv"
-            style={{ display: 'none' }}
-          />
-          <div style={{
-            marginTop: "0.5rem",
-            fontSize: "0.9rem",
-            color: "#7F8C8D"
-          }}>
-            {file ? file.name : "No file selected"}
-          </div>
-        </div>
-        <div style={{ marginBottom: "1rem" }}>
-          <label>Secret Key (for encryption):</label>
-          <input
-            type="text"
-            value={secretKey}
-            onChange={(e) => setSecretKey(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "0.5rem",
-              border: "1px solid #ddd",
-              borderRadius: "6px",
-              marginTop: "0.5rem"
-            }}
-          />
-        </div>
-        <Button onClick={handleUpload}>Upload & Encrypt Data</Button>
-        <ResultTextarea value={uploadResult} />
-      </SectionCard>
+    <div>
+      <h2>Upload Your Health Data (JSON)</h2>
 
-      <SectionCard>
-        <h3 style={{ color: "#2C3E50", marginBottom: "1rem" }}>Mint & Share Your Data Token</h3>
-        <p style={{ 
-          color: "#7F8C8D", 
-          marginBottom: "1rem",
-          fontSize: "1rem" 
-        }}>
-          Transform your encrypted health data into a unique Data Token (NFT) on XRPL.
-        </p>
-        
-        <div style={{
-          backgroundColor: "#f8f9fa",
-          padding: "1rem",
-          borderRadius: "6px",
-          marginBottom: "1.5rem",
-          border: "1px solid #e9ecef"
-        }}>
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "0.5rem",
-            marginBottom: "0.5rem"
-          }}>
-            <input
-              type="checkbox"
-              id="consent-checkbox"
-              checked={consent}
-              onChange={(e) => setConsent(e.target.checked)}
-              style={{ 
-                width: "18px", 
-                height: "18px" 
-              }}
-            />
-            <label 
-              htmlFor="consent-checkbox"
-              style={{
-                fontSize: "1rem",
-                color: "#2C3E50",
-                fontWeight: "500"
-              }}
-            >
-              Enable Data Sharing & Earn Rewards
-            </label>
-          </div>
-          <p style={{ 
-            color: "#7F8C8D",
-            fontSize: "0.9rem",
-            marginLeft: "24px"  // Aligns with checkbox text
-          }}>
-            By enabling data sharing, you authorize the use of your Data Token 
-            and start earning rewards from data queries.
-          </p>
-        </div>
+      {/* JSON File Input */}
+      <input type="file" accept=".json" onChange={handleFileChange} />
 
-        <Button>
-          {consent ? "Mint Token & Enable Sharing" : "Mint Token"}
-        </Button>
-        <ResultTextarea value={mintResult} />
-      </SectionCard>
+      {/* Display JSON Content */}
+      {jsonData && (
+        <div style={{ marginTop: '10px' }}>
+          <h4>Preview JSON Data:</h4>
+          <pre style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word', maxHeight: '300px', overflowY: 'auto' }}>
+            {JSON.stringify(jsonData, null, 2)}
+          </pre>
+        </div>
+      )}
+
+      <br />
+      <label>
+        <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
+        Consent to share data
+      </label>
+      <br />
+      <button onClick={() => {}}>Upload Data</button>
     </div>
   );
 };
@@ -262,3 +172,4 @@ export default UploadData;
 // // Decrypt data
 // const bytes = CryptoJS.AES.decrypt(encrypted, 'your-secret-key');
 // const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+

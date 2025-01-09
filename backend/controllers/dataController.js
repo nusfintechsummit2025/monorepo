@@ -10,10 +10,50 @@ const {
   RLUSD_ADDRESS,
   RLUSD_ABI,
 } = require("../utils/contractsConfig");
+const { spawn } = require('child_process');
+const path = require('path');
+const fs = require('fs');
 
 const privacyContract = new ethers.Contract(PRIVACY_ADDRESS, PRIVACY_ABI, signer);
 const marketContract = new ethers.Contract(MARKET_ADDRESS, MARKET_ABI, signer);
 const rlusdContract = new ethers.Contract(RLUSD_ADDRESS, RLUSD_ABI, signer);
+
+exports.processFile = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    const filePath = path.join(__dirname, '../uploads', req.file.filename);
+
+    const pythonProcess = spawn('python3', ['data_processor.py', filePath]);
+
+    let output = '';
+    let errorOutput = '';
+
+    pythonProcess.stdout.on('data', (data) => {
+      output += data.toString();
+    });
+
+    pythonProcess.stderr.on('data', (data) => {
+      errorOutput += data.toString();
+    });
+
+    pythonProcess.on('close', (code) => {
+      if (code === 0) {
+        res.status(200).json({ message: 'File processed successfully!', output });
+      } else {
+        console.error('Python process error:', errorOutput);
+        res.status(500).json({ error: 'Python script failed', details: errorOutput });
+      }
+
+      fs.unlinkSync(filePath);
+    });
+  } catch (error) {
+    console.error('Server error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
 
 exports.uploadData = async (req, res) => {
   /**
