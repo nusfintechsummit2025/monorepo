@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from "react";
 
 const WalletConnect = ({ onConnect }) => {
-  const [address, setAddress] = useState(null);
+  const [address, setAddress] = useState(() => {
+    // Check if there's a stored address in localStorage
+    return localStorage.getItem('walletAddress') || null;
+  });
 
   const connectWallet = async () => {
     if (!window.ethereum) {
@@ -11,6 +14,7 @@ const WalletConnect = ({ onConnect }) => {
     try {
       const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
       setAddress(accounts[0]);
+      localStorage.setItem('walletAddress', accounts[0]); // Store address
       if (onConnect) onConnect(accounts[0]);
     } catch (err) {
       console.error("Wallet connection error:", err);
@@ -20,8 +24,10 @@ const WalletConnect = ({ onConnect }) => {
   useEffect(() => {
     if (window.ethereum) {
       window.ethereum.on("accountsChanged", (accounts) => {
-        setAddress(accounts[0]);
-        if (onConnect) onConnect(accounts[0]);
+        const newAddress = accounts[0] || null;
+        setAddress(newAddress);
+        localStorage.setItem('walletAddress', newAddress); // Update stored address
+        if (onConnect) onConnect(newAddress);
       });
     }
   }, [onConnect]);
