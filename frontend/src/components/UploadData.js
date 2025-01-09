@@ -5,6 +5,9 @@ const UploadData = ({ account }) => {
   const [csvContent, setCsvContent] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState("");
+  const [isMinting, setIsMinting] = useState(false);
+  const [mintResult, setMintResult] = useState("");
+  const [consent, setConsent] = useState(false);
 
   const SectionCard = ({ children, style }) => (
     <div style={{
@@ -91,6 +94,22 @@ const UploadData = ({ account }) => {
     }, delay);
   };
 
+  const handleMintTokens = () => {
+    setIsMinting(true);
+    setMintResult("");
+
+    // Demo delay 2-4 seconds
+    const delay = Math.random() * 2000 + 2000;
+    
+    // Generate a random token ID for demo
+    const tokenId = `0x${Math.random().toString(16).slice(2, 6)}...${Math.random().toString(16).slice(2, 6)}`;
+    
+    setTimeout(() => {
+      setIsMinting(false);
+      setMintResult(`Successfully minted your data token ${tokenId}`);
+    }, delay);
+  };
+
   return (
     <div style={{
       display: "flex",
@@ -103,9 +122,13 @@ const UploadData = ({ account }) => {
     }}>
       <SectionCard style={{
         backgroundColor: "white",
-        marginBottom: 0
+        marginBottom: "2rem"
       }}>
-        <h3 style={{ color: "#2C3E50", marginBottom: "1.5rem", textAlign: "center" }}>
+        <h3 style={{ 
+          color: "#2C3E50", 
+          marginBottom: "1.5rem",
+          textAlign: "center" 
+        }}>
           Upload Your Health Data
         </h3>
         
@@ -220,6 +243,117 @@ const UploadData = ({ account }) => {
           </div>
         )}
       </SectionCard>
+
+      {uploadResult && (
+        <SectionCard style={{
+          backgroundColor: "white",
+          marginBottom: 0
+        }}>
+          <h3 style={{ 
+            color: "#2C3E50", 
+            marginBottom: "1.5rem",
+            textAlign: "center" 
+          }}>
+            Mint & Share Your Data Token
+          </h3>
+          
+          <div style={{
+            backgroundColor: "#f8f9fa",
+            padding: "1.5rem",
+            borderRadius: "8px",
+            marginBottom: "1.5rem",
+            border: "1px solid #e9ecef"
+          }}>
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              marginBottom: "0.5rem"
+            }}>
+              <input
+                type="checkbox"
+                id="consent-checkbox"
+                checked={consent}
+                onChange={(e) => setConsent(e.target.checked)}
+                style={{
+                  width: "18px",
+                  height: "18px"
+                }}
+              />
+              <label
+                htmlFor="consent-checkbox"
+                style={{
+                  fontSize: "1rem",
+                  color: "#2C3E50",
+                  fontWeight: "500"
+                }}
+              >
+                Enable Data Sharing & Earn Rewards
+              </label>
+            </div>
+            <p style={{
+              color: "#7F8C8D",
+              fontSize: "0.9rem",
+              marginLeft: "24px"
+            }}>
+              By enabling data sharing, you authorize the use of your Data Token
+              and start earning rewards from data queries.
+            </p>
+          </div>
+
+          <Button 
+            onClick={handleMintTokens}
+            disabled={isMinting}
+          >
+            {isMinting ? (
+              <>
+                <LoadingSpinner />
+                Minting Tokens...
+              </>
+            ) : (
+              consent ? "Mint Token & Enable Sharing" : "Mint Token"
+            )}
+          </Button>
+
+          {mintResult && (
+            <div style={{
+              backgroundColor: "#d4edda",
+              color: "#155724",
+              padding: "1rem",
+              borderRadius: "6px",
+              marginTop: "1rem",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem"
+            }}>
+              <svg 
+                viewBox="0 0 24 24"
+                style={{
+                  width: "24px",
+                  height: "24px",
+                  fill: "currentColor"
+                }}
+              >
+                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 4.9c2.04 0 3.9 1.86 3.9 3.9s-1.86 3.9-3.9 3.9-3.9-1.86-3.9-3.9 1.86-3.9 3.9-3.9zm0 1.8c-1.17 0-2.1.93-2.1 2.1s.93 2.1 2.1 2.1 2.1-.93 2.1-2.1-.93-2.1-2.1-2.1z"/>
+                <path d="M12 1L4.2 4.5v5.5c0 5.11 3.45 9.89 8.2 11.33 4.75-1.44 8.2-6.22 8.2-11.33V4.5L12 1zm0 2.9c-2.04 0-3.9 1.86-3.9 3.9s1.86 3.9 3.9 3.9 3.9-1.86 3.9-3.9-1.86-3.9-3.9-3.9zm0 1.8c1.17 0 2.1.93 2.1 2.1s-.93 2.1-2.1 2.1-2.1-.93-2.1-2.1.93-2.1 2.1-2.1z"/>
+              </svg>
+              <div style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "0.25rem"
+              }}>
+                <span>{mintResult}</span>
+                <span style={{
+                  fontSize: "0.9rem",
+                  opacity: 0.8
+                }}>
+                  Your data is now tokenized and secure
+                </span>
+              </div>
+            </div>
+          )}
+        </SectionCard>
+      )}
     </div>
   );
 };

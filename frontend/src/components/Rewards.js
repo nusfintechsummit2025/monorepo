@@ -54,7 +54,7 @@ const Rewards = () => {
             textAlign: "center",
             marginBottom: "1rem"
           }}>
-            100 RLUSD
+            100 HELIXUSD
           </div>
           <div style={{
             fontSize: "0.9rem",
